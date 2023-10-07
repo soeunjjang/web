@@ -1,67 +1,91 @@
+<style>
+    #div_books img{
+        cursor : pointer;
+    }
+    #div_books .bi{
+        cursor: pointer;
+        color:green;
+        font-size: 1.5rem;
+    }
+</style>
 <div class="row my-5">
     <div class="col">
-        <style>
-        #div_books img {
-            cursor: pointer;
-        }
-         </style>
-        <!--검색폼-->
-        <div class="row mb-2 justify-content-end">
-            <form name="frm" class="col-6 col-md-4 col-lg-3">
+        <!-- 검색폼-->
+        <div class="row justify-content-end mb-2">
+            <form name = "frm" class = "col-6 col-md-4 col-lg-3">
                 <div class="input-group">
-                    <input name="query" class="form-control" value="자바">
+                    <input name = "query" class="form-control" value="자바">
                     <button class="btn btn-primary">검색</button>
                 </div>
             </form>
         </div>
-        <!--도서검색결과-->
-        <div id="div_books" class="row"></div>
-        <!--페이지 이동버튼-->
-        <div class ="text-center">
+        <!-- 도서검색 결과 출력-->
+        <div id="div_books" class ="row"></div>
+        <!--페이지 이동 버튼-->
+        <div class="text-center">
             <button id="prev" class="btn btn-primary">이전</button>
             <span id="span_page" class="mx-3">1/10</span>
             <button id="next" class="btn btn-primary">다음</button>
         </div>
     </div>
-    </div>
 </div>
+
 <!--도서검색 템플릿-->
 <script type="x-handlebars-template" id="temp_books">
     {{#each documents}}
-     <div class="col-6 col-md-4 col-lg-2 mb-3">
-         <div class="card">
-            <div class="card-body">
-            <img src="{{check thumbnail}}" width="90%" index="{{@index}}">
-            <div class ="ellipsis" pt-3" style="font-size:0.8rem;">
-            {{title}}
-         </div>
-     </div>  
-            <div class="card-footer" style="font-size:0.8rem;">
-             {{format price}}
+         <div class="col-6 col-md-4 col-lg-2 mb-3">
+            <div class="card">
+                <div class ="card-body">
+                    <img src="{{check thumbnail}}" width="90%" index="{{@index}}"> <!--인덱스변수는 @-->
+                    <div class="ellipsis pt-3" style="font-size:0.8rem;">
+                        {{title}}
+                    </div>
+                </div>
+                <div class ="card-footer">
+                    {{format price}}
+                    <i class="bi bi-cart4 float-end" book="{{book @this}}"></i>
+                </div>
             </div>
         </div>
-    </div>
-    <%-include('books/modal.ejs')%>
-     {{/each}}
+        <%-include('books/modal.ejs')%> 
+    {{/each}}
 </script>
+
 <script>
-    Handlebars.registerHelper("check", function(thumbnail){
-        if(thumbnail){
+    Handlebars.registerHelper("check",function(thumbnail){ //check가 함수이름/funchtion(매개변수)
+        if(thumbnail) {
             return thumbnail
         }else{
             return "http://via.placeholder.com/120x170";
         }
-
     });
+
     Handlebars.registerHelper("format",function(price){
         return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원';
-
     });
+
+    Handlebars.registerHelper("book",function(book){
+        return JSON.stringify(book); //object -> string
+    });
+
 </script>
+
 <script>
     let query=$(frm.query).val();
-    let page=1;
+    let page =1;
+
     getBooks();
+
+    //장바구니 클릭하였을 때
+    $("#div_books").on("click",".bi",function(){
+        if(!sessionStorage.getItem("email")){
+            location.href="/users/login";
+        }else{
+            //장바구니 등록
+            const book=JSON.parse($(this).attr("book")); //sting -> object
+            console.log(book);
+        }
+    });
 
      //이미지를 선택
      $("#div_books").on("click", "img", function(){
