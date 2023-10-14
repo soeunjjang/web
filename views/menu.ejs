@@ -16,6 +16,9 @@
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="/locals">지역검색</a>
       </li>
+      <li class="nav-item" id="cart" style="display:none;">
+        <a class="nav-link active" aria-current="page" href="/books/cart">장바구니</a>
+      </li>
         </ul>
         <ul class="navbar-nav d-flex">
             <li class="nav-item" id="login">
@@ -33,16 +36,19 @@
     </div>
   </nav>
   <script>
-    if(sessionStorage.getItem("email")){
-      $("#login, #email, #logout").toggle();
-      $("#email a").html(sessionStorage.getItem("email"));
+    if(sessionStorage.getItem("email")) {
+        $("#login, #email, #logout, #cart").toggle();
+        $("#email a").html(sessionStorage.getItem("email"));
     }
+
     //로그아웃 메뉴를 클릭한 경우
     $("#logout").on("click", "a", function(e){
-      e.preventDefault();
-      if(confirm("정말로 로그아웃하실래요?")){
-        sessionStorage.clear();
-        location.href="/";
-      }
+        e.preventDefault();
+        if(confirm("정말로 로그아웃하시겠습니까?")){
+            sessionStorage.clear();
+            location.href="/";
+        }else{
+            alert("로그아웃이 취소되었습니다.")
+        }
     });
-  </script>
+</script>

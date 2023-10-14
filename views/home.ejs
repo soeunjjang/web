@@ -1,135 +1,159 @@
 <style>
-    #div_books img{
-        cursor : pointer;
+    #div_books img {
+        cursor: pointer;
     }
-    #div_books .bi{
+    #div_books .bi-cart-check{
         cursor: pointer;
         color:green;
-        font-size: 1.5rem;
+        font-size:1.5rem;
     }
 </style>
 <div class="row my-5">
-    <div class="col">
-        <!-- 검색폼-->
-        <div class="row justify-content-end mb-2">
-            <form name = "frm" class = "col-6 col-md-4 col-lg-3">
+    <div class="col my-5">
+        <!-- 검색폼 -->
+        <div class="row mb-2 justify-content-end">
+            <form name="frm" class="col-6 col-md-4 col-lg-3">
                 <div class="input-group">
-                    <input name = "query" class="form-control" value="자바">
+                    <input name="query" type="text" class="form-control" value="자바">
                     <button class="btn btn-primary">검색</button>
                 </div>
             </form>
         </div>
-        <!-- 도서검색 결과 출력-->
-        <div id="div_books" class ="row"></div>
-        <!--페이지 이동 버튼-->
+        <!-- 도서검색 결과 출력 -->
+        <div id="div_books" class="row"></div>
+        <!-- 페이지 이동버튼 -->
         <div class="text-center">
             <button id="prev" class="btn btn-primary">이전</button>
-            <span id="span_page" class="mx-3">1/10</span>
+            <span id="span_page" class="mx-3"></span>
             <button id="next" class="btn btn-primary">다음</button>
         </div>
     </div>
 </div>
-
-<!--도서검색 템플릿-->
+<!-- 도서검색 정보 출력 template -->
 <script type="x-handlebars-template" id="temp_books">
     {{#each documents}}
-         <div class="col-6 col-md-4 col-lg-2 mb-3">
+        <div class="col col-6 col-md-4 col-lg-2 mb-3">
             <div class="card">
-                <div class ="card-body">
-                    <img src="{{check thumbnail}}" width="90%" index="{{@index}}"> <!--인덱스변수는 @-->
-                    <div class="ellipsis pt-3" style="font-size:0.8rem;">
-                        {{title}}
-                    </div>
+                <div class="card-body">
+                    <img src="{{check thumbnail}}" width="90%" style="margin:0 auto; display:block" index="{{@index}}">
+                    <div class="ellipsis pt-3" style="form-size:0.8rem">{{title}}</div>
                 </div>
-                <div class ="card-footer">
+                <div class="card-footer" style="font-size:0.8rem">
                     {{format price}}
-                    <i class="bi bi-cart4 float-end" book="{{book @this}}"></i>
+                    <i class="cart bi bi-basket float-end" book="{{book @this}}"></i>
                 </div>
             </div>
         </div>
-        <%-include('books/modal.ejs')%> 
+        <%-include('books/modal.ejs')%>
     {{/each}}
 </script>
-
 <script>
-    Handlebars.registerHelper("check",function(thumbnail){ //check가 함수이름/funchtion(매개변수)
-        if(thumbnail) {
-            return thumbnail
-        }else{
-            return "http://via.placeholder.com/120x170";
+    Handlebars.registerHelper("check", function(thumbnail){
+        if(thumbnail){
+            return thumbnail;
+        } else {
+            return "http://via.placeholder.com/120x175";
         }
     });
 
-    Handlebars.registerHelper("format",function(price){
+    Handlebars.registerHelper("format", function(price){
         return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원';
     });
 
-    Handlebars.registerHelper("book",function(book){
-        return JSON.stringify(book); //object -> string
+    Handlebars.registerHelper("book", function(book){
+        return JSON.stringify(book);//object -> string 변환
     });
-
 </script>
 
-<script>
-    let query=$(frm.query).val();
-    let page =1;
+<script type="module">
+    import { app } from "/javascripts/firebase.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+
+    const db = getDatabase(app);//app에서 가져옴
+
+    let query = $(frm.query).val();
+    let page = 1;
 
     getBooks();
 
-    //장바구니 클릭하였을 때
-    $("#div_books").on("click",".bi",function(){
-        if(!sessionStorage.getItem("email")){
+    // 장바구니를 클릭한 경우
+     $("#div_books").on("click", ".bi", function(){
+         if(!sessionStorage.getItem("email")) {
             location.href="/users/login";
         }else{
-            //장바구니 등록
-            const book=JSON.parse($(this).attr("book")); //sting -> object
+            
+           //장바구니에 등록
+            const book=JSON.parse($(this).attr("book")); // string -> Object
             console.log(book);
+        }
+     });
+
+    $("#div_books").on("click", ".cart", async function(){
+        if(!sessionStorage.getItem("email")){
+            alert("로그인이 되지 않았습니다.");
+            location.href="/users/login";
+        }else {
+            //장바구니에 있는지 체크
+            const book=JSON.parse($(this).attr("book")); // string -> Object
+            const ref_cart=ref(db, `cart/${sessionStorage.getItem("uid")}/${book.isbn}`);
+            const snapshot = await get(ref_cart);
+
+            console.log('....', snapshot.val());
+
+            if(snapshot.val()){
+                alert("이미 장바구니에 존재합니다!")
+            }else {
+                if(!confirm('장바구니에 해당 도서 넣으실래요?')) return;
+                set(ref_cart, book); 
+                alert("해당도서가 저장되었습니다.");
+            }
         }
     });
 
-     //이미지를 선택
-     $("#div_books").on("click", "img", function(){
-        let index=$(this).attr("index");
-        $("#modal" + index).modal("show");
-    });
-
-    $(frm).on("submit", function(event){
-        event.preventDefault();
+    $(frm).on("submit", function(e){
+        e.preventDefault();
         query=$(frm.query).val();
         page=1;
         getBooks();
     });
 
-    //다음 버튼을 클릭한 경우
+    // img click(modal)
+    $("#div_books").on('click', 'img', function(){
+        let index = $(this).attr("index");
+        $("#modal" + index).modal("show");
+    });
+
+    // 이전 버튼 클릭
+    $("#prev").on("click", function(){
+        page--;
+        getBooks();
+    });
+
+    // 다음 버튼 클릭
     $("#next").on("click", function(){
         page++;
         getBooks();
     });
 
-
-    //이전 버튼을 클릭한 경우
-    $("#prev").on("click", function(){
-        page--;
-        getBooks();
-    });
     function getBooks(){
         $.ajax({
             type:"get",
             url:"https://dapi.kakao.com/v3/search/book?target=title",
-            headers:{"Authorization":"KakaoAK fead24ad9a96277e30db18c2e95c9234"},
-            data:{query:query,page:page, size:6},
+            headers: {"Authorization": "KakaoAK 47d18512e80079439c076a3605f727e4"},
+            data:{query:query, page:page, size:6},
             success:function(result){
                 console.log(result);
-                let temp=Handlebars.compile($("#temp_books").html());
+                let temp = Handlebars.compile($("#temp_books").html());
                 $("#div_books").html(temp(result));
+
                 let last = Math.ceil(result.meta.pageable_count/6);
-                $("#span_page").html(page +  "/" + last);
+                $("#span_page").html(page + "/" + last);
 
-                if(page==1) $("#prev").attr("disabled", true);
-                else $("#prev").attr("disabled",false);
+                if(page == 1) $("#prev").attr("disabled", true)
+                else $("#prev").attr("disabled", false);
 
-                if(result.meta.is_end) $("#next").attr("disabled",true);
-                else $("#next").attr("disabled", flase);
+                if(result.meta.is_end) $("#next").attr("disabled", true)
+                else $("#next").attr("disabled", false);
             }
         });
     }

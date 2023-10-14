@@ -1,17 +1,15 @@
 <style>
-    form span{
-        width: 100px;
+    form span {
+        width:100px;
     }
 </style>
-
 <div class="row my-5 justify-content-center">
-    <div class="col-md-6">
+    <div class="col-6">
         <h1 class="text-center">로그인</h1>
         <form name="frm" class="card p-3">
-        <form class="card p-3">
             <div class="input-group mb-3">
                 <span class="input-group-text">이메일</span>
-                <input name="email" class="form-control" value="blue@test.com">
+                <input name="email" class="form-control" type="text" value="blue@test.com">
             </div>
             <div class="input-group mb-3">
                 <span class="input-group-text">비밀번호</span>
@@ -25,33 +23,35 @@
     </div>
 </div>
 <script type="module">
-    import {app} from "/javascripts/firebase.js";
-    import { getAuth, signInWithEmailAndPassword }
-         from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+    import { app } from "/javascripts/firebase.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+    //createUserWithEmailAndPassword
     const auth=getAuth(app);
 
     $(frm).on("submit", function(e){
         e.preventDefault();
-        //유효성체크 - 값이 유효한지 아닌지
-        const email=$(frm.email).val();
-        const pass=$(frm.password).val();
+        //유효성체크
+        const email = $(frm.email).val();
+        const pwd = $(frm.password).val();
+
         if(email == ""){
-        alert("이메일을 입력하세요");
-        $(frm.email).focus();
-        } else if(pass == ""){
+            alert("이메일을 입력하세요!");
+            $(frm.email).focus();
+        }else if(pwd == ""){
             alert("비밀번호를 입력하세요!");
             $(frm.password).focus();
         }else{
             //로그인체크
-            //alert(email + pass);
-            signInWithEmailAndPassword(auth,email,pass).then(success=>{
+            // alert(email+pwd);
+            //signInWithEmailAndPassword - firebase 제공 함수
+            signInWithEmailAndPassword(auth, email, pwd).then(success =>{
                 console.log(success);
-                alert("로그인에 성공했습니다.");
-                sessionStorage.setItem("email",email);
+                alert("로그인 성공했습니다.")
+                sessionStorage.setItem("email", email);
                 sessionStorage.setItem("uid", success.user.uid);
                 location.href="/";
             }).catch(error=>{
-                console.log(error);
+                console.log(error.message);
                 alert(error.message);
             });
         }
