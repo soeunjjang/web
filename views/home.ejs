@@ -1,11 +1,11 @@
 <style>
-    #div_books img {
+    #div_books img,
+    #div_books .bi-cart-check {
         cursor: pointer;
     }
-    #div_books .bi-cart-check{
-        cursor: pointer;
-        color:green;
-        font-size:1.5rem;
+    #div_books .bi-cart-check {
+        color: green;
+        font-size: 1.5rem;
     }
 </style>
 <div class="row my-5">
@@ -19,7 +19,7 @@
                 </div>
             </form>
         </div>
-        <!-- 도서검색 결과 출력 -->
+        <!-- 도서검색 결과 -->
         <div id="div_books" class="row"></div>
         <!-- 페이지 이동버튼 -->
         <div class="text-center">
@@ -29,7 +29,7 @@
         </div>
     </div>
 </div>
-<!-- 도서검색 정보 출력 template -->
+<!-- 도서 검색 template -->
 <script type="x-handlebars-template" id="temp_books">
     {{#each documents}}
         <div class="col col-6 col-md-4 col-lg-2 mb-3">
@@ -40,7 +40,7 @@
                 </div>
                 <div class="card-footer" style="font-size:0.8rem">
                     {{format price}}
-                    <i class="cart bi bi-basket float-end" book="{{book @this}}"></i>
+                    <i class="cart bi bi-cart-check float-end" book="{{book @this}}"></i>
                 </div>
             </div>
         </div>
@@ -61,15 +61,16 @@
     });
 
     Handlebars.registerHelper("book", function(book){
-        return JSON.stringify(book);//object -> string 변환
+        return JSON.stringify(book); // object => string
     });
 </script>
 
-<script type="module">
-    import { app } from "/javascripts/firebase.js";
+<script type="module"> // module 시험에 나옴
+    // import
+    import { app } from '/javascripts/firebase.js';
     import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
 
-    const db = getDatabase(app);//app에서 가져옴
+    const db = getDatabase(app); // app 시험에 나옴
 
     let query = $(frm.query).val();
     let page = 1;
@@ -77,36 +78,28 @@
     getBooks();
 
     // 장바구니를 클릭한 경우
-     $("#div_books").on("click", ".bi", function(){
-         if(!sessionStorage.getItem("email")) {
-            location.href="/users/login";
-        }else{
-            
-           //장바구니에 등록
-            const book=JSON.parse($(this).attr("book")); // string -> Object
-            console.log(book);
-        }
-     });
-
     $("#div_books").on("click", ".cart", async function(){
-        if(!sessionStorage.getItem("email")){
-            alert("로그인이 되지 않았습니다.");
-            location.href="/users/login";
-        }else {
-            //장바구니에 있는지 체크
-            const book=JSON.parse($(this).attr("book")); // string -> Object
-            const ref_cart=ref(db, `cart/${sessionStorage.getItem("uid")}/${book.isbn}`);
-            const snapshot = await get(ref_cart);
+        if(!sessionStorage.getItem("uid")){
+            alert("로그인 후 이용 부탁 드립니다.");
+            location.href='/users/login';
+            return;
+        }
 
-            console.log('....', snapshot.val());
+        const book = JSON.parse($(this).attr("book"));
+        // console.log(book);
 
-            if(snapshot.val()){
-                alert("이미 장바구니에 존재합니다!")
-            }else {
-                if(!confirm('장바구니에 해당 도서 넣으실래요?')) return;
-                set(ref_cart, book); 
-                alert("해당도서가 저장되었습니다.");
-            }
+        const ref_cart = ref(db, `cart/${sessionStorage.getItem("uid")}/${book.isbn}`);
+
+        // 장바구니 존재 유무
+        const result = await get(ref_cart);
+        // console.log(result.val());
+
+        if(result.val()){
+            alert("이미 장바구니에 존재합니다.");
+        } else {
+            if(!confirm("장바구니에 추가 하시겠습니까?")) return;
+            set(ref_cart, book);
+            alert("장바구니에 추가되었습니다.");
         }
     });
 
@@ -116,6 +109,8 @@
         page=1;
         getBooks();
     });
+
+
 
     // img click(modal)
     $("#div_books").on('click', 'img', function(){

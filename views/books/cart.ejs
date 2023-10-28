@@ -20,13 +20,13 @@
 <script type="module">//시험나옴
     import { app } from "/javascripts/firebase.js";
     import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
-
+    //onValue 목록 가져오는 것
     const db = getDatabase(app);//시험나옴
 
     //장바구니 목록
-    const ref_cart=ref(db, `cart/${sessionStorage.getItem("uid")}`);
+    const ref_book=ref(db, `cart/${sessionStorage.getItem("uid")}`);
     let rows=[];
-    onValue(ref_cart, snapshot=>{
+    onValue(ref_book, snapshot=>{
         let rows=[];
         snapshot.forEach(row => {
             //console.log(row.key, row.val());
@@ -41,7 +41,7 @@
     $("#div_cart").on("click", ".btn", function(){
         const isbn=$(this).attr("isbn");
         if(!confirm(`${isbn} 도서를 삭제하실래요?`)) return;
-        const ref_cart=ref(db, `cart/${sessionStorage.getItem("uid")}/${isbn}`);
-        remove(ref_cart);
+        const ref_book=ref(db, `cart/${sessionStorage.getItem("uid")}/${isbn}`);
+        remove(ref_book);
     });
 </script>
